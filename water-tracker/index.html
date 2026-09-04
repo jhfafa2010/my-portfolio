@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>물 마시기 트래커</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <a class="back-link" href="../index.html">← 포트폴리오로</a>
+
+    <header class="tracker-header">
+      <p class="tracker-date" id="tracker-date"></p>
+      <h1>💧 물 마시기 트래커</h1>
+      <p class="tracker-sub">눈에 보이지 않아 잊는 물, 버튼 한 번으로 기록해요</p>
+    </header>
+
+    <main class="tracker-card">
+      <div class="goal-row">
+        <span class="goal-label">오늘 목표</span>
+        <div class="goal-control">
+          <button class="goal-btn" id="goal-minus" aria-label="목표 줄이기">−</button>
+          <span class="goal-value" id="goal-value"></span>
+          <span class="goal-unit">잔</span>
+          <button class="goal-btn" id="goal-plus" aria-label="목표 늘리기">+</button>
+        </div>
+      </div>
+
+      <div class="cups-row" id="cups-row"></div>
+
+      <p class="progress-text" id="progress-text"></p>
+
+      <div class="action-row">
+        <button class="btn-drink" id="btn-drink">+1잔 마시기</button>
+        <button class="btn-undo" id="btn-undo">되돌리기</button>
+      </div>
+    </main>
+
+    <section class="history-section">
+      <h3>최근 7일</h3>
+      <div class="history-bars" id="history-bars"></div>
+    </section>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>

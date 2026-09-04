@@ -1,0 +1,252 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", "Pretendard", -apple-system, sans-serif;
+  background: linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%);
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+.app-container {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 20px;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.tracker-header {
+  text-align: center;
+  color: white;
+  margin-bottom: 24px;
+}
+
+.tracker-date {
+  font-size: 0.9rem;
+  opacity: 0.85;
+  margin-bottom: 6px;
+}
+
+.tracker-header h1 {
+  font-size: 1.7rem;
+  margin-bottom: 6px;
+}
+
+.tracker-sub {
+  font-size: 0.92rem;
+  opacity: 0.9;
+}
+
+.tracker-card {
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  margin-bottom: 24px;
+}
+
+.goal-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.goal-label {
+  font-size: 0.92rem;
+  color: #666;
+}
+
+.goal-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.goal-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+  background: #f8f9fa;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #333;
+  transition: background 0.15s ease;
+}
+
+.goal-btn:hover {
+  background: #e9edf5;
+}
+
+.goal-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #222;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.goal-unit {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.cups-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 18px;
+  min-height: 2.4rem;
+}
+
+.cup-icon {
+  font-size: 1.7rem;
+  filter: grayscale(1) opacity(0.35);
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.cup-icon.filled {
+  filter: grayscale(0) opacity(1);
+  transform: scale(1.05);
+}
+
+.cup-icon.bonus {
+  filter: grayscale(0) opacity(1);
+}
+
+.progress-text {
+  text-align: center;
+  font-size: 1rem;
+  color: #444;
+  margin-bottom: 22px;
+}
+
+.progress-text strong {
+  color: #2f7dc4;
+  font-size: 1.3rem;
+}
+
+.progress-text.done strong {
+  color: #2ba871;
+}
+
+.action-row {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-drink {
+  flex: 1;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-drink:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(91, 134, 229, 0.4);
+}
+
+.btn-undo {
+  padding: 14px 18px;
+  font-size: 0.9rem;
+  background: #f8f9fa;
+  color: #888;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-undo:hover:not(:disabled) {
+  background: #f0f0f0;
+  color: #555;
+}
+
+.btn-undo:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.history-section {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.history-section h3 {
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.history-bars {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8px;
+  height: 110px;
+}
+
+.history-bar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+  height: 100%;
+}
+
+.history-bar-count {
+  font-size: 0.72rem;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.history-bar {
+  width: 100%;
+  max-width: 26px;
+  background: linear-gradient(180deg, #5b86e5, #36d1dc);
+  border-radius: 6px 6px 3px 3px;
+  min-height: 4px;
+}
+
+.history-bar.empty {
+  background: #eceef1;
+}
+
+.history-bar.goal-met {
+  background: linear-gradient(180deg, #2ba871, #4fd18f);
+}
+
+.history-bar-label {
+  font-size: 0.72rem;
+  color: #999;
+  margin-top: 6px;
+}
+
+.history-bar-label.today {
+  color: #2f7dc4;
+  font-weight: 700;
+}
