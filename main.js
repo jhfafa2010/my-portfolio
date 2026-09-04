@@ -23,6 +23,12 @@ const projects = [
     icon: "💡",
     link: "daily-idea-tips/index.html",
   },
+  {
+    title: "물 마시기 트래커",
+    description: "버튼 한 번으로 오늘의 물 섭취량을 기록하는 앱",
+    icon: "💧",
+    link: "water-tracker/index.html",
+  },
 ];
 
 const grid = document.getElementById("project-grid");
