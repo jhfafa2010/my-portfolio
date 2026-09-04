@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>신화 배틀도감: 그리스 로마 신화 마스터</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- 컨페티(꽃가루 파티클) CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap');
+    body { font-family: 'Noto Sans KR', sans-serif; }
+    .font-impact { font-family: 'Black Han Sans', sans-serif; }
+
+    .perspective-1000 { perspective: 1000px; }
+    .transform-style-3d { transform-style: preserve-3d; }
+    .backface-hidden { backface-visibility: hidden; }
+    .rotate-y-180 { transform: rotateY(180deg); }
+    .card-inner { transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .card.flipped .card-inner { transform: rotateY(180deg); }
+
+    .tree-path { transition: stroke 0.3s, stroke-width 0.3s, opacity 0.3s; }
+    .tree-path.active {
+      stroke: #f59e0b !important;
+      stroke-width: 4px !important;
+      opacity: 1 !important;
+      filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.9));
+    }
+    .tree-node { transition: box-shadow 0.3s, transform 0.3s; }
+
+    /* 피격 및 진동 애니메이션 */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+    .animate-shake { animation: shake 0.4s ease-in-out; }
+
+    @keyframes popCorrect {
+      0% { transform: scale(0.9); opacity: 0; }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop { animation: popCorrect 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-20 selection:bg-amber-500 selection:text-black">
+
+  <!-- 헤더 영역 -->
+  <header class="bg-gradient-to-b from-amber-600 via-amber-700 to-slate-950 py-8 px-4 text-center border-b border-amber-500/30">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="text-center md:text-left">
+        <span class="bg-amber-400 text-slate-950 font-black text-xs px-3 py-1 rounded-full uppercase tracking-wider">Mythology Master TCG</span>
+        <h1 class="font-impact text-4xl md:text-5xl text-amber-300 mt-2 tracking-wide drop-shadow-[0_4px_10px_rgba(245,158,11,0.5)]">
+          ⚡ 그리스 신화 완전정복 카드도감
+        </h1>
+        <p class="text-amber-100 text-sm md:text-base font-bold mt-1">
+          10초 타임어택 초성 퀴즈 배틀과 폭죽 파티로 올림포스 계보를 정복하세요!
+        </p>
+      </div>
+
+      <!-- 상단 액션 버튼군 -->
+      <div class="flex items-center gap-3">
+        <button onclick="startQuizBattle()"
+                class="bg-gradient-to-r from-red-500 via-rose-500 to-amber-500 hover:brightness-110 text-white font-black px-6 py-3.5 rounded-2xl shadow-xl text-base flex items-center gap-2 border-2 border-amber-200 transition-all transform hover:scale-105 active:scale-95 animate-pulse">
+          <i class="fa-solid fa-gamepad text-xl"></i>
+          <span>⚔️ 10초 타임어택 배틀!</span>
+        </button>
+
+        <button onclick="openTreeModal()"
+                class="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black px-5 py-3.5 rounded-2xl shadow-xl text-base flex items-center gap-2 border-2 border-amber-200 transition-all transform hover:scale-105 active:scale-95">
+          <i class="fa-solid fa-sitemap text-lg"></i>
+          <span>혈통맵 보기</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 필터 및 검색 바 -->
+    <div class="mt-8 max-w-2xl mx-auto flex flex-col sm:flex-row gap-3 px-2">
+      <input type="text" id="searchInput" placeholder="신 이름 or 칭호 검색 (예: 벼락, 제우스, 파도)"
+             class="px-5 py-3 rounded-2xl bg-slate-900 border-2 border-amber-500/50 text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 shadow-inner flex-1 text-sm font-bold" />
+      <div class="flex gap-1.5 justify-center flex-wrap" id="filterButtons">
+        <button onclick="filterGen('all')" class="filter-btn active bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs">전체</button>
+        <button onclick="filterGen('1')" class="filter-btn bg-slate-800 hover:bg-slate-700 text-emerald-300 font-bold px-3 py-2 rounded-xl text-xs border border-emerald-500/30">1세대 태초</button>
+        <button onclick="filterGen('2')" class="filter-btn bg-slate-800 hover:bg-slate-700 text-purple-300 font-bold px-3 py-2 rounded-xl text-xs border border-purple-500/30">2세대 티탄</button>
+        <button onclick="filterGen('3')" class="filter-btn bg-slate-800 hover:bg-slate-700 text-sky-300 font-bold px-3 py-2 rounded-xl text-xs border border-sky-500/30">3세대 올림포스</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 카드 덱 그리드 -->
+  <main class="max-w-7xl mx-auto mt-10 px-4">
+    <div id="cardGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+  </main>
+
+  <!-- ⚔️ 초성 퀴즈 타임어택 배틀 모달 -->
+  <div id="quizModal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div id="quizBox" class="bg-gradient-to-b from-slate-900 to-slate-950 border-4 border-amber-400 rounded-3xl w-full max-w-xl p-6 sm:p-8 shadow-[0_0_50px_rgba(245,158,11,0.3)] relative overflow-hidden text-center transition-colors duration-300">
+
+      <!-- 상단 컨트롤: 콤보, 점수, 음소거, 닫기 -->
+      <div class="flex justify-between items-center pb-4 border-b border-slate-800 text-xs">
+        <div class="flex items-center gap-2">
+          <span id="quizComboBadge" class="hidden bg-gradient-to-r from-red-500 to-amber-500 text-white font-black px-3 py-1 rounded-full text-xs animate-bounce">
+            🔥 <span id="quizComboText">2</span> COMBO!
+          </span>
+          <span class="text-slate-400 font-bold">진행: <span id="quizProgress" class="text-amber-300">1/10</span></span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="font-impact text-lg text-amber-400">점수: <span id="quizScore">0</span>점</span>
+          <button onclick="toggleAudio()" id="audioBtn" class="text-slate-400 hover:text-amber-300 text-sm">
+            <i class="fa-solid fa-volume-high"></i>
+          </button>
+          <button onclick="closeQuizModal()" class="text-slate-400 hover:text-white text-xl font-black">✕</button>
+        </div>
+      </div>
+
+      <!-- 타임어택 게이지 바 -->
+      <div id="quizTimerSection" class="mt-4 mb-2">
+        <div class="flex justify-between items-center text-xs font-black mb-1.5 px-1">
+          <span class="text-slate-400 flex items-center gap-1">
+            <i class="fa-solid fa-stopwatch text-amber-400"></i> 제한 시간
+          </span>
+          <span id="quizTimeText" class="font-impact text-sm text-amber-300 tracking-wider">10.0초</span>
+        </div>
+        <div class="w-full bg-slate-800 rounded-full h-3.5 overflow-hidden border border-slate-700 p-[2px]">
+          <div id="quizTimerBar" class="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 w-full transition-all duration-75 ease-linear"></div>
+        </div>
+      </div>
+
+      <!-- 문제 영역 본체 -->
+      <div id="quizQuestionBody" class="py-4">
+        <div id="quizAvatar" class="w-24 h-24 mx-auto mb-2 filter drop-shadow-lg"></div>
+        <div id="quizHintTitle" class="text-xs font-bold text-amber-400 bg-amber-950/80 px-3 py-1 rounded-full inline-block border border-amber-500/40 mb-2">
+          우주최강 벼락대장
+        </div>
+
+        <div class="my-3">
+          <div class="text-xs text-slate-400 font-bold mb-1">이 신의 이름 초성은?</div>
+          <div id="quizChosungText" class="font-impact text-5xl sm:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-orange-400 tracking-widest py-1">
+            ㅈ ㅇ ㅅ
+          </div>
+        </div>
+
+        <div id="quizHintTags" class="flex justify-center gap-1.5 flex-wrap my-2"></div>
+
+        <form onsubmit="handleQuizSubmit(event)" class="mt-5 flex flex-col gap-3 max-w-sm mx-auto">
+          <div class="relative">
+            <input type="text" id="quizInput" autocomplete="off" placeholder="신 이름을 입력하세요"
+                   class="w-full text-center text-xl font-bold py-3.5 px-4 rounded-2xl bg-slate-900 border-2 border-amber-400 text-white placeholder-slate-500 focus:outline-none focus:ring-4 focus:ring-amber-400/50 shadow-inner" />
+          </div>
+          <div class="flex gap-2">
+            <button type="button" onclick="skipQuestion()" class="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-slate-700">
+              넘어가기 ↷
+            </button>
+            <button type="submit" class="flex-2 w-2/3 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:brightness-110 text-slate-950 font-black text-sm shadow-lg">
+              공격하기 ⚔️
+            </button>
+          </div>
+        </form>
+
+        <div id="quizFeedback" class="h-6 mt-3 text-xs font-black"></div>
+      </div>
+
+      <!-- 배틀 완료 결과 화면 -->
+      <div id="quizResultBody" class="py-8 hidden">
+        <div id="resultMedal" class="text-6xl mb-3">🏆</div>
+        <h3 id="resultGrade" class="font-impact text-3xl text-amber-300">올림포스 최고사령관 등극!</h3>
+        <p class="text-sm text-slate-300 mt-2 font-bold">최종 배틀 점수: <span id="finalScore" class="text-amber-400 text-lg">100</span>점</p>
+        <p id="resultComment" class="text-xs text-slate-400 mt-1 max-w-md mx-auto">신화의 모든 계보와 특징을 꿰뚫고 계시군요!</p>
+
+        <div class="mt-8 flex justify-center gap-3">
+          <button onclick="startQuizBattle()" class="py-3 px-6 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-sm shadow-xl">
+            다시 도전하기 🔄
+          </button>
+          <button onclick="closeQuizModal()" class="py-3 px-6 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm border border-slate-700">
+            카드 탐험하기 🏛️
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 가계도 SVG 모달 -->
+  <div id="treeModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex flex-col justify-center items-center p-4">
+    <div class="bg-slate-900 rounded-3xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden border-2 border-amber-500/50">
+      <div class="bg-slate-800 px-6 py-4 flex items-center justify-between border-b border-slate-700">
+        <div>
+          <h2 class="font-impact text-xl text-amber-400">🏛️ 올림포스 혈통 계보 트리맵</h2>
+          <p class="text-xs text-slate-400 font-medium">캐릭터 얼굴 위 문장(紋章)이 각 신의 상징이에요. 인물을 클릭하면 조상·자손 관계선 전체가 강조되고, 카드로 바로 이동합니다.</p>
+          <div class="flex gap-4 mt-2 text-[10px] font-bold text-slate-400">
+            <span class="flex items-center gap-1.5"><span class="w-5 h-[2.5px] bg-slate-500 inline-block rounded"></span> 혈연(부모·자녀)</span>
+            <span class="flex items-center gap-1.5"><span class="w-5 h-[2px] inline-block rounded" style="background-image:repeating-linear-gradient(90deg,#f472b6 0 4px,transparent 4px 8px)"></span> 혼인 관계</span>
+          </div>
+        </div>
+        <button onclick="closeTreeModal()" class="text-slate-400 hover:text-white text-2xl font-bold w-10 h-10 flex items-center justify-center">✕</button>
+      </div>
+
+      <div class="flex-1 overflow-auto relative p-8 bg-slate-950">
+        <div id="treeCanvas" class="relative min-w-[1100px] min-h-[760px] pb-12">
+          <svg id="treeSvg" class="absolute inset-0 w-full h-full pointer-events-none z-10"></svg>
+
+          <!-- 1세대 -->
+          <div class="mb-16">
+            <span class="text-xs font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-500/40 px-3 py-1 rounded-full">1세대: 세상의 시작</span>
+            <div class="flex justify-center gap-28 mt-4">
+              <div id="node-uranus" onclick="focusOnNode('uranus')" class="tree-node z-20 cursor-pointer bg-slate-900 border-2 border-indigo-500 rounded-2xl p-3 text-center shadow-lg w-36 hover:scale-105 transition-all">
+                <div class="w-14 h-14 mx-auto" data-god-avatar="uranus"></div>
+                <div class="font-impact text-white text-sm mt-1">우라노스</div>
+                <div class="text-[11px] text-indigo-400 font-bold">밤하늘의 지배자</div>
+              </div>
+              <div id="node-gaia" onclick="focusOnNode('gaia')" class="tree-node z-20 cursor-pointer bg-slate-900 border-2 border-emerald-500 rounded-2xl p-3 text-center shadow-lg w-36 hover:scale-105 transition-all">
+                <div class="w-14 h-14 mx-auto" data-god-avatar="gaia"></div>
+                <div class="font-impact text-white text-sm mt-1">가이아</div>
+                <div class="text-[11px] text-emerald-400 font-bold">생명의 대지엄마</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2세대 -->
+          <div class="mb-16">
+            <span class="text-xs font-bold text-purple-400 bg-purple-950/80 border border-purple-500/40 px-3 py-1 rounded-full">2세대: 거인 티탄족</span>
+            <div class="flex justify-center gap-28 mt-4">
+              <div id="node-cronus" onclick="focusOnNode('cronus')" class="tree-node z-20 cursor-pointer bg-slate-900 border-2 border-purple-500 rounded-2xl p-3 text-center shadow-lg w-36 hover:scale-105 transition-all">
+                <div class="w-14 h-14 mx-auto" data-god-avatar="cronus"></div>
+                <div class="font-impact text-white text-sm mt-1">크로노스</div>
+                <div class="text-[11px] text-purple-400 font-bold">시간과 낫의 제왕</div>
+              </div>
+              <div id="node-rhea" onclick="focusOnNode('rhea')" class="tree-node z-20 cursor-pointer bg-slate-900 border-2 border-pink-500 rounded-2xl p-3 text-center shadow-lg w-36 hover:scale-105 transition-all">
+                <div class="w-14 h-14 mx-auto" data-god-avatar="rhea"></div>
+                <div class="font-impact text-white text-sm mt-1">레아</div>
+                <div class="text-[11px] text-pink-400 font-bold">풍요로운 어머니</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3세대 1차 -->
+          <div class="mb-16">
+            <span class="text-xs font-bold text-sky-400 bg-sky-950/80 border border-sky-500/40 px-3 py-1 rounded-full">3세대: 올림포스 주요 원년 신</span>
+            <div class="grid grid-cols-4 gap-8 max-w-3xl mx-auto mt-4">
+              <div id="node-hades" onclick="focusOnNode('hades')" class="tree-node z-20 cursor-pointer bg-slate-900 border-2 border-slate-500 rounded-2xl p-3 text-center shadow w-full hover:scale-105 transition-all">
+                <div class="w-12 h-12 mx-auto" data-god-avatar="hades"></div>
+                <div class="font-impact text-sm">하데스</div>
+                <div class="text-[10px] text-slate-400 font-bold">지하의 암흑군주</div>
+              </div>
+              <div id="node-poseidon" onclick="focusOnNode('poseidon')" class="tree-node z-20 cursor-pointer bg-slate-900 border-2 border-cyan-500 rounded-2xl p-3 text-center shadow w-full hover:scale-105 transition-all">
+                <div class="w-12 h-12 mx-auto" data-god-avatar="poseidon"></div>
+                <div class="font-impact text-sm">포세이돈</div>
+                <div class="text-[10px] text-cyan-400 font-bold">바다의 삼지창맨</div>
+              </div>
+              <div id="node-hera" onclick="focusOnNode('hera')" class="tree-node z-20 cursor-pointer bg-slate-900 border-2 border-emerald-500 rounded-2xl p-3 text-center shadow w-full hover:scale-105 transition-all">
+                <div class="w-12 h-12 mx-auto" data-god-avatar="hera"></div>
+                <div class="font-impact text-sm">헤라</div>
+                <div class="text-[10px] text-emerald-400 font-bold">올림포스 최고여왕</div>
+              </div>
+              <div id="node-zeus" onclick="focusOnNode('zeus')" class="tree-node z-20 cursor-pointer bg-slate-900 border-2 border-amber-400 rounded-2xl p-3 text-center shadow-lg w-full ring-2 ring-amber-400/50 hover:scale-105 transition-all">
+                <div class="w-12 h-12 mx-auto" data-god-avatar="zeus"></div>
+                <div class="font-impact text-amber-300 text-sm">제우스</div>
+                <div class="text-[10px] text-amber-400 font-bold">신들의 최고 우두머리</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 올림포스 직무 신군 -->
+          <div>
+            <span class="text-xs font-bold text-amber-400 bg-amber-950/80 border border-amber-500/40 px-3 py-1 rounded-full">올림포스 슈퍼스타 신군</span>
+            <div class="grid grid-cols-8 gap-3 mt-4">
+              <div id="node-athena" onclick="focusOnNode('athena')" class="tree-node z-20 cursor-pointer bg-slate-900 border border-sky-400 rounded-xl p-2 text-center hover:scale-105 transition-all">
+                <div class="w-10 h-10 mx-auto" data-god-avatar="athena"></div><div class="font-impact text-xs mt-1">아테나</div>
+              </div>
+              <div id="node-apollo" onclick="focusOnNode('apollo')" class="tree-node z-20 cursor-pointer bg-slate-900 border border-amber-400 rounded-xl p-2 text-center hover:scale-105 transition-all">
+                <div class="w-10 h-10 mx-auto" data-god-avatar="apollo"></div><div class="font-impact text-xs mt-1">아폴론</div>
+              </div>
+              <div id="node-artemis" onclick="focusOnNode('artemis')" class="tree-node z-20 cursor-pointer bg-slate-900 border border-teal-400 rounded-xl p-2 text-center hover:scale-105 transition-all">
+                <div class="w-10 h-10 mx-auto" data-god-avatar="artemis"></div><div class="font-impact text-xs mt-1">아르테미스</div>
+              </div>
+              <div id="node-ares" onclick="focusOnNode('ares')" class="tree-node z-20 cursor-pointer bg-slate-900 border border-red-500 rounded-xl p-2 text-center hover:scale-105 transition-all">
+                <div class="w-10 h-10 mx-auto" data-god-avatar="ares"></div><div class="font-impact text-xs mt-1">아레스</div>
+              </div>
+              <div id="node-hephaestus" onclick="focusOnNode('hephaestus')" class="tree-node z-20 cursor-pointer bg-slate-900 border border-orange-500 rounded-xl p-2 text-center hover:scale-105 transition-all">
+                <div class="w-10 h-10 mx-auto" data-god-avatar="hephaestus"></div><div class="font-impact text-xs mt-1">헤파이토스</div>
+              </div>
+              <div id="node-aphrodite" onclick="focusOnNode('aphrodite')" class="tree-node z-20 cursor-pointer bg-slate-900 border border-pink-400 rounded-xl p-2 text-center hover:scale-105 transition-all">
+                <div class="w-10 h-10 mx-auto" data-god-avatar="aphrodite"></div><div class="font-impact text-xs mt-1">아프로디테</div>
+              </div>
+              <div id="node-hermes" onclick="focusOnNode('hermes')" class="tree-node z-20 cursor-pointer bg-slate-900 border border-lime-400 rounded-xl p-2 text-center hover:scale-105 transition-all">
+                <div class="w-10 h-10 mx-auto" data-god-avatar="hermes"></div><div class="font-impact text-xs mt-1">헤르메스</div>
+              </div>
+              <div id="node-dionysus" onclick="focusOnNode('dionysus')" class="tree-node z-20 cursor-pointer bg-slate-900 border border-purple-400 rounded-xl p-2 text-center hover:scale-105 transition-all">
+                <div class="w-10 h-10 mx-auto" data-god-avatar="dionysus"></div><div class="font-impact text-xs mt-1">디오니소스</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const gods = [
+      { id: "zeus", name: "제우스", title: "⚡ 우주최강 벼락대장", en: "Zeus (유피테르)", gen: 3, badgeBg: "bg-amber-500 text-slate-950", borderCol: "border-amber-400", color: "#f59e0b", tags: ["#번개창", "#독수리", "#신들의왕"], hook: "올림포스 서열 1위! 화나면 던지는 마스터 벼락은 산도 부숴요.", parents: "크로노스 & 레아", relations: "헤라의 남편 / 신들의 아버지", secret: "형제들을 아빠 뱃속에서 구해낸 뒤 제비뽑기로 하늘의 왕이 되었어요!" },
+      { id: "poseidon", name: "포세이돈", title: "🌊 파도폭풍 삼지창맨", en: "Poseidon (넵투누스)", gen: 3, badgeBg: "bg-cyan-500 text-slate-950", borderCol: "border-cyan-400", color: "#06b6d4", tags: ["#삼지창", "#해일·지진", "#말의창조자"], hook: "삼지창을 땅에 쾅 찍으면 쓰나미와 지진이 와르르!", parents: "크로노스 & 레아", relations: "제우스의 형님", secret: "성격이 불같아서 바다를 지나가는 배들을 시험하길 좋아했답니다." },
+      { id: "hades", name: "하데스", title: "🗝️ 지하세계 암흑군주", en: "Hades (플루토)", gen: 3, badgeBg: "bg-slate-400 text-slate-950", borderCol: "border-slate-400", color: "#94a3b8", tags: ["#투명투구", "#머리셋달린개", "#지하보물"], hook: "쓰면 몸이 감춰지는 투명 투구(퀴네에)와 지하 모든 황금의 주인!", parents: "크로노스 & 레아", relations: "제우스·포세이돈의 맏형", secret: "무섭게 생겼지만 지하의 법칙을 철저히 지키는 원칙주의자 신이에요." },
+      { id: "hera", name: "헤라", title: "🦚 올림포스 최고여왕", en: "Hera (유노)", gen: 3, badgeBg: "bg-emerald-500 text-slate-950", borderCol: "border-emerald-400", color: "#10b981", tags: ["#황금왕관", "#공작새", "#결혼수호"], hook: "올림포스 신들의 퍼스트레이디! 가정을 해치는 자는 절대 용서 안 해요.", parents: "크로노스 & 레아", relations: "제우스의 아내", secret: "공작새 깃털의 눈동자 무늬는 100개의 눈을 가진 거인 아르고스의 눈이랍니다." },
+      { id: "athena", name: "아테나", title: "🦉 지혜의 무적 방패소녀", en: "Athena (미네르바)", gen: 3, badgeBg: "bg-sky-400 text-slate-950", borderCol: "border-sky-300", color: "#38bdf8", tags: ["#아이기스방패", "#올빼미", "#전략천재"], hook: "제우스 머리에서 갑옷을 입고 태어난 천재 지략가!", parents: "제우스 (단독 탄생)", relations: "제우스의 딸", secret: "단순 무력보다 지혜를 앞세워 포세이돈을 꺾고 수도 아테네의 주인이 되었어요." },
+      { id: "apollo", name: "아폴론", title: "☀️ 태양빛 슈퍼스타", en: "Apollo (아폴로)", gen: 3, badgeBg: "bg-amber-400 text-slate-950", borderCol: "border-amber-300", color: "#fbbf24", tags: ["#태양마차", "#황금하프", "#예언·의술"], hook: "황금 마차를 몰고 음악과 의술로 세상을 밝히는 만능 미남 신!", parents: "제우스 & 레토", relations: "아르테미스의 쌍둥이 오빠", secret: "델포이 신전에서 미래를 100% 맞히는 신탁을 내려주던 예언의 신이에요." },
+      { id: "artemis", name: "아르테미스", title: "🏹 달빛 백발백중 사냥꾼", en: "Artemis (디아나)", gen: 3, badgeBg: "bg-teal-400 text-slate-950", borderCol: "border-teal-300", color: "#2dd4bf", tags: ["#은빛활", "#달과사슴", "#숲의수호자"], hook: "달빛을 가르며 어둠 속에서도 과녁을 절대 놓치지 않는 명사수!", parents: "제우스 & 레토", relations: "아폴론의 쌍둥이 동생", secret: "숲과 야생 동물들을 사랑해서 숲을 함부로 어지럽히면 사슴으로 변신시켰어요!" },
+      { id: "ares", name: "아레스", title: "⚔️ 불꽃의 돌격 싸움대장", en: "Ares (마르스)", gen: 3, badgeBg: "bg-red-500 text-white", borderCol: "border-red-500", color: "#ef4444", tags: ["#전쟁의신", "#거대창과방패", "#멧돼지"], hook: "싸움 냄새만 맡으면 앞뒤 안 가리고 뛰어드는 열혈 전사!", parents: "제우스 & 헤라", relations: "헤파이토스의 형제", secret: "무시무시해 보이지만 지혜로운 아테나와 싸우면 매번 졌답니다." },
+      { id: "aphrodite", name: "아프로디테", title: "🕊️ 심쿵유발 미의 여신", en: "Aphrodite (베누스)", gen: 3, badgeBg: "bg-pink-400 text-slate-950", borderCol: "border-pink-300", color: "#f472b6", tags: ["#바다거품", "#황금조개", "#에로스엄마"], hook: "바다의 하얀 거품 속에서 조개를 타고 탄생한 세상 제일 미녀!", parents: "우라노스의 흔적 & 바다 거품", relations: "헤파이토스의 아내", secret: "발걸음을 옮기는 곳마다 예쁜 꽃이 피어나고 동물들이 춤을 췄어요." },
+      { id: "hephaestus", name: "헤파이토스", title: "🔨 번개뚝딱 천재대장장이", en: "Hephaestus (불카누스)", gen: 3, badgeBg: "bg-orange-500 text-slate-950", borderCol: "border-orange-400", color: "#f97316", tags: ["#불과대장간", "#마법망치", "#천재발명가"], hook: "제우스의 번개와 아킬레우스의 무적 갑옷을 혼자 다 만든 손기술 최강자!", parents: "제우스 & 헤라", relations: "아프로디테의 남편", secret: "움직이는 황금 로봇 하녀를 직접 발명해서 데리고 다녔답니다!" },
+      { id: "hermes", name: "헤르메스", title: "🪽 번개발 날개배달부", en: "Hermes (메르쿠리우스)", gen: 3, badgeBg: "bg-lime-400 text-slate-950", borderCol: "border-lime-300", color: "#a3e635", tags: ["#날개신발", "#뱀지팡이", "#스피드왕"], hook: "날개 달린 모자와 신발을 신고 바람보다 빠르게 달리는 전령!", parents: "제우스 & 마이아", relations: "신들의 소통 심부름꾼", secret: "태어난 날 바로 요람에서 빠져나와 거북이 등껍질로 첫 하프를 만들었어요." },
+      { id: "dionysus", name: "디오니소스", title: "🍇 흥폭발 페스티벌왕", en: "Dionysus (바쿠스)", gen: 3, badgeBg: "bg-purple-500 text-white", borderCol: "border-purple-400", color: "#a855f7", tags: ["#달콤포도", "#표범", "#올림포스막내"], hook: "가는 곳마다 쿵쾅쿵쾅 축제를 몰고 다니는 올림포스의 분위기 메이커!", parents: "제우스 & 세멜레", relations: "올림포스 12신의 막내", secret: "인간 어머니에게서 태어나 온갖 모험 끝에 올림포스 신의 자리에 오른 영웅이에요." },
+      { id: "cronus", name: "크로노스", title: "⏳ 시간의 아기꿀꺽왕", en: "Cronus (사투르누스)", gen: 2, badgeBg: "bg-purple-400 text-slate-950", borderCol: "border-purple-400", color: "#c084fc", tags: ["#시간의낫", "#아기삼키기", "#티탄의지배자"], hook: "아들이 왕위를 뺏을까 봐 아기들을 꿀꺽 삼켰던 무시무시한 옛 지배자!", parents: "우라노스 & 가이아", relations: "제우스의 아버지", secret: "결국 돌덩이를 삼키고 속아서 삼켰던 자식들을 전부 다시 토해냈어요." },
+      { id: "rhea", name: "레아", title: "🦁 풍요와 지혜의 어머니", en: "Rhea (옵스)", gen: 2, badgeBg: "bg-rose-400 text-slate-950", borderCol: "border-rose-300", color: "#fb7185", tags: ["#돌사자탑", "#아기구출작전", "#대지의풍요"], hook: "남편 몰래 아기 제우스를 숨겨 키워 올림포스 시대를 연 현명한 어머니!", parents: "우라노스 & 가이아", relations: "제우스 삼형제의 어머니", secret: "크레타 섬의 동굴에 제우스를 숨기고 방패를 두드려 울음소리를 감췄어요." },
+      { id: "gaia", name: "가이아", title: "🌍 만물의 위대한 왕엄마", en: "Gaia (테라)", gen: 1, badgeBg: "bg-emerald-400 text-slate-950", borderCol: "border-emerald-300", color: "#34d399", tags: ["#모든생명의시작", "#대지의여신", "#카오스탈출"], hook: "우주가 혼돈(카오스)일 때 스스로 나타나 하늘과 산, 바다를 낳은 태초의 어머니!", parents: "태초의 혼돈에서 탄생", relations: "모든 신들의 증조할머니", secret: "땅 그 자체여서 지구 상의 모든 생명은 가이아의 품 안에서 살아가고 있어요." },
+      { id: "uranus", name: "우라노스", title: "🌌 최초의 밤하늘 군주", en: "Uranus (카이루스)", gen: 1, badgeBg: "bg-indigo-400 text-slate-950", borderCol: "border-indigo-400", color: "#818cf8", tags: ["#별빛하늘", "#최초의왕", "#시간의시작"], hook: "세상을 통틀어 가장 처음으로 우주를 지배했던 거대한 하늘의 신!", parents: "가이아에게서 탄생", relations: "티탄족의 아버지", secret: "자식들이 너무 힘이 세자 무서워서 깊은 땅속 타르타로스에 가둬버렸답니다." }
+    ];
+
+    // 세대 & 혼인 관계 (자녀는 부모 양쪽 모두에서 이어짐)
+    const treeRelations = [
+      { from: 'uranus', to: 'cronus', type: 'lineage' },
+      { from: 'gaia', to: 'rhea', type: 'lineage' },
+      { from: 'cronus', to: 'hades', type: 'lineage' },
+      { from: 'rhea', to: 'hades', type: 'lineage' },
+      { from: 'cronus', to: 'poseidon', type: 'lineage' },
+      { from: 'rhea', to: 'poseidon', type: 'lineage' },
+      { from: 'cronus', to: 'hera', type: 'lineage' },
+      { from: 'rhea', to: 'hera', type: 'lineage' },
+      { from: 'cronus', to: 'zeus', type: 'lineage' },
+      { from: 'rhea', to: 'zeus', type: 'lineage' },
+      { from: 'zeus', to: 'athena', type: 'lineage' },
+      { from: 'zeus', to: 'apollo', type: 'lineage' },
+      { from: 'zeus', to: 'artemis', type: 'lineage' },
+      { from: 'zeus', to: 'ares', type: 'lineage' },
+      { from: 'hera', to: 'ares', type: 'lineage' },
+      { from: 'zeus', to: 'hephaestus', type: 'lineage' },
+      { from: 'hera', to: 'hephaestus', type: 'lineage' },
+      { from: 'zeus', to: 'hermes', type: 'lineage' },
+      { from: 'zeus', to: 'dionysus', type: 'lineage' },
+      { from: 'zeus', to: 'hera', type: 'spouse' },
+      { from: 'hephaestus', to: 'aphrodite', type: 'spouse' }
+    ];
+
+    // ── 신 색상을 밝게/어둡게 조정하는 헬퍼 (아바타 그라데이션용) ──
+    function shadeColor(hex, percent) {
+      const f = parseInt(hex.slice(1), 16);
+      const t = percent < 0 ? 0 : 255;
+      const p = percent < 0 ? percent * -1 : percent;
+      const R = f >> 16, G = (f >> 8) & 0x00ff, B = f & 0x0000ff;
+      return "#" + (
+        0x1000000 +
+        (Math.round((t - R) * p) + R) * 0x10000 +
+        (Math.round((t - G) * p) + G) * 0x100 +
+        (Math.round((t - B) * p) + B)
+      ).toString(16).slice(1);
+    }
+
+    // ── 신마다 고유한 상징 문장(紋章) SVG. 캐릭터 흉부에 새겨 특징을 각인시킴 ──
+    const GOD_SYMBOLS = {
+      zeus: `<polygon points="54,48 40,68 48,68 38,82 62,60 52,60 60,48" fill="#fff"/>`,
+      poseidon: `<g stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round">
+        <line x1="50" y1="50" x2="50" y2="82"/>
+        <path d="M42 50 Q42 58 50 58 Q58 58 58 50"/>
+        <line x1="42" y1="46" x2="42" y2="54"/>
+        <line x1="50" y1="44" x2="50" y2="54"/>
+        <line x1="58" y1="46" x2="58" y2="54"/>
+      </g>`,
+      hades: `<g fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round">
+        <circle cx="46" cy="56" r="7"/>
+        <line x1="53" y1="56" x2="68" y2="56"/>
+        <line x1="60" y1="56" x2="60" y2="62"/>
+        <line x1="66" y1="56" x2="66" y2="64"/>
+      </g>`,
+      hera: `<g fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+        <polyline points="36,64 40,48 46,60 50,46 54,60 60,48 64,64"/>
+        <line x1="36" y1="64" x2="64" y2="64"/>
+      </g>`,
+      athena: `<g>
+        <circle cx="43" cy="58" r="6" fill="none" stroke="#fff" stroke-width="3"/>
+        <circle cx="57" cy="58" r="6" fill="none" stroke="#fff" stroke-width="3"/>
+        <circle cx="43" cy="58" r="2" fill="#fff"/>
+        <circle cx="57" cy="58" r="2" fill="#fff"/>
+        <polygon points="50,62 46,70 54,70" fill="#fff"/>
+      </g>`,
+      apollo: `<g stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round">
+        <circle cx="50" cy="61" r="9" fill="#fff" stroke="none"/>
+        <line x1="50" y1="44" x2="50" y2="49"/>
+        <line x1="50" y1="73" x2="50" y2="78"/>
+        <line x1="33" y1="61" x2="38" y2="61"/>
+        <line x1="62" y1="61" x2="67" y2="61"/>
+        <line x1="38" y1="49" x2="41" y2="52"/>
+        <line x1="59" y1="70" x2="62" y2="73"/>
+        <line x1="62" y1="49" x2="59" y2="52"/>
+        <line x1="41" y1="70" x2="38" y2="73"/>
+      </g>`,
+      artemis: `<path d="M60 47 A15 15 0 1 0 60 77 A11 11 0 1 1 60 47 Z" fill="#fff"/>
+        <line x1="34" y1="68" x2="52" y2="60" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+        <polygon points="52,60 46,57 48,63" fill="#fff"/>`,
+      ares: `<g stroke="#fff" stroke-width="3.5" stroke-linecap="round">
+        <line x1="38" y1="48" x2="62" y2="76"/>
+        <line x1="62" y1="48" x2="38" y2="76"/>
+      </g>`,
+      aphrodite: `<path d="M50 78 C34 65 34 51 45 49 C48 48 50 51 50 54 C50 51 52 48 55 49 C66 51 66 65 50 78 Z" fill="#fff"/>`,
+      hephaestus: `<g fill="#fff">
+        <rect x="36" y="43" width="26" height="11" rx="2"/>
+        <rect x="46" y="52" width="6" height="30" rx="2"/>
+      </g>`,
+      hermes: `<path d="M34 62 Q45 44 64 49 Q59 58 68 58 Q59 65 64 72 Q45 74 34 62 Z" fill="#fff"/>`,
+      dionysus: `<g fill="#fff">
+        <circle cx="43" cy="55" r="5.5"/>
+        <circle cx="57" cy="55" r="5.5"/>
+        <circle cx="50" cy="64" r="5.5"/>
+        <circle cx="43" cy="73" r="5.5"/>
+        <circle cx="57" cy="73" r="5.5"/>
+      </g>`,
+      cronus: `<g stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round">
+        <line x1="41" y1="82" x2="58" y2="45"/>
+        <path d="M58 45 Q73 44 67 60 Q60 69 51 60"/>
+      </g>`,
+      rhea: `<polygon points="50,45 54,58 67,58 56,66 60,80 50,71 40,80 44,66 33,58 46,58" fill="#fff"/>`,
+      gaia: `<g stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round">
+        <circle cx="50" cy="63" r="12"/>
+        <path d="M50 51 Q55 44 60 46"/>
+      </g>`,
+      uranus: `<g fill="#fff">
+        <circle cx="50" cy="62" r="3.5"/>
+        <circle cx="39" cy="52" r="2.2"/>
+        <circle cx="63" cy="53" r="2.2"/>
+        <circle cx="61" cy="73" r="2.2"/>
+        <circle cx="37" cy="71" r="2.2"/>
+      </g>`
+    };
+
+    // 신 데이터를 받아 후드 로브 실루엣 + 고유 문장이 새겨진 캐릭터 아바타 SVG를 생성
+    function characterAvatarSVG(g) {
+      const light = shadeColor(g.color, 0.45);
+      const dark = shadeColor(g.color, -0.35);
+      const gradId = `grad-${g.id}`;
+      const symbol = GOD_SYMBOLS[g.id] || '';
+      return `
+        <svg viewBox="0 0 100 100" class="w-full h-full" role="img" aria-label="${g.name} 캐릭터 아이콘">
+          <defs>
+            <radialGradient id="${gradId}" cx="50%" cy="28%" r="80%">
+              <stop offset="0%" stop-color="${light}" />
+              <stop offset="100%" stop-color="${g.color}" />
+            </radialGradient>
+          </defs>
+          <circle cx="50" cy="52" r="46" fill="${g.color}" opacity="0.12" />
+          <circle cx="50" cy="30" r="21" fill="none" stroke="${g.color}" stroke-width="1.5" opacity="0.55" />
+          <path d="M16 98 C16 68 29 52 50 49 C71 52 84 68 84 98 Z" fill="url(#${gradId})" stroke="${dark}" stroke-width="2" />
+          <circle cx="50" cy="30" r="17" fill="url(#${gradId})" stroke="${dark}" stroke-width="2" />
+          ${symbol}
+        </svg>`;
+    }
+
+    function renderTreeAvatars() {
+      document.querySelectorAll('[data-god-avatar]').forEach(el => {
+        const god = gods.find(g => g.id === el.dataset.godAvatar);
+        if (god) el.innerHTML = characterAvatarSVG(god);
+      });
+    }
+
+    // Web Audio API 사운드 엔진
+    let audioCtx = null;
+    let isSoundMuted = false;
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function toggleAudio() {
+      isSoundMuted = !isSoundMuted;
+      const btn = document.getElementById('audioBtn');
+      btn.innerHTML = isSoundMuted ? '<i class="fa-solid fa-volume-xmark text-red-400"></i>' : '<i class="fa-solid fa-volume-high"></i>';
+    }
+
+    function playTone(freq, type, duration, startTime = 0) {
+      if (isSoundMuted) return;
+      initAudio();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime + startTime);
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime + startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + startTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(audioCtx.currentTime + startTime);
+      osc.stop(audioCtx.currentTime + startTime + duration);
+    }
+
+    function soundCorrect() {
+      playTone(523.25, 'sine', 0.15, 0);
+      playTone(659.25, 'sine', 0.15, 0.08);
+      playTone(783.99, 'sine', 0.25, 0.16);
+    }
+
+    function soundWrong() {
+      playTone(180, 'sawtooth', 0.25, 0);
+      playTone(130, 'sawtooth', 0.35, 0.15);
+    }
+
+    function soundVictory() {
+      [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+        playTone(f, 'triangle', 0.35, i * 0.12);
+      });
+    }
+
+    // ⏰ 3초 이하 긴급 카운트다운 비프음
+    function soundWarningBeep() {
+      playTone(880, 'square', 0.08, 0);
+    }
+
+    // 컨페티 폭죽 파티클 제어
+    function triggerCorrectConfetti() {
+      if (typeof confetti !== 'function') return;
+      confetti({
+        particleCount: 50,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#fbbf24', '#f59e0b', '#d97706', '#ffffff'],
+        zIndex: 9999,
+        scalar: 1.1
+      });
+      confetti({
+        particleCount: 25,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0.3, y: 0.65 },
+        colors: ['#38bdf8', '#34d399', '#fbbf24'],
+        shapes: ['star'],
+        zIndex: 9999
+      });
+      confetti({
+        particleCount: 25,
+        angle: 120,
+        spread: 55,
+        origin: { x: 0.7, y: 0.65 },
+        colors: ['#f43f5e', '#a855f7', '#fbbf24'],
+        shapes: ['star'],
+        zIndex: 9999
+      });
+    }
+
+    function triggerVictoryConfetti() {
+      if (typeof confetti !== 'function') return;
+      const duration = 3.5 * 1000;
+      const end = Date.now() + duration;
+
+      (function frame() {
+        confetti({
+          particleCount: 4,
+          angle: 60,
+          spread: 60,
+          origin: { x: 0, y: 0.8 },
+          colors: ['#f59e0b', '#38bdf8', '#ec4899', '#10b981', '#ffffff'],
+          zIndex: 9999
+        });
+        confetti({
+          particleCount: 4,
+          angle: 120,
+          spread: 60,
+          origin: { x: 1, y: 0.8 },
+          colors: ['#f59e0b', '#a855f7', '#3b82f6', '#f43f5e', '#ffffff'],
+          zIndex: 9999
+        });
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      })();
+
+      setTimeout(() => {
+        confetti({
+          particleCount: 100,
+          spread: 100,
+          origin: { y: 0.45 },
+          colors: ['#fbbf24', '#f59e0b', '#ffffff', '#e11d48'],
+          shapes: ['circle', 'star'],
+          zIndex: 9999,
+          scalar: 1.2
+        });
+      }, 700);
+    }
+
+    // 초성 추출 함수
+    const CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+    function extractChosung(word) {
+      let res = '';
+      for (let i = 0; i < word.length; i++) {
+        const code = word.charCodeAt(i) - 44032;
+        if (code >= 0 && code <= 11172) {
+          res += CHOSUNG[Math.floor(code / 588)] + ' ';
+        } else {
+          res += word[i] + ' ';
+        }
+      }
+      return res.trim();
+    }
+
+    // ⏱️ 타임어택 및 퀴즈 배틀 엔진
+    const QUESTION_TIME_LIMIT = 10.0;
+    let quizTimer = null;
+    let timeRemaining = QUESTION_TIME_LIMIT;
+    let lastWarningSecond = -1;
+
+    let quizDeck = [];
+    let currentQuizIndex = 0;
+    let quizScore = 0;
+    let quizCombo = 0;
+    const TOTAL_QUIZ_ROUNDS = 10;
+
+    function stopTimer() {
+      if (quizTimer) {
+        clearInterval(quizTimer);
+        quizTimer = null;
+      }
+    }
+
+    function resetTimerVisuals() {
+      const bar = document.getElementById('quizTimerBar');
+      const timeText = document.getElementById('quizTimeText');
+      const quizBox = document.getElementById('quizBox');
+
+      bar.style.width = '100%';
+      bar.className = 'h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 w-full transition-all duration-75 ease-linear';
+      timeText.className = 'font-impact text-sm text-amber-300 tracking-wider';
+      quizBox.classList.remove('border-red-500', 'shadow-[0_0_50px_rgba(239,68,68,0.5)]');
+      quizBox.classList.add('border-amber-400', 'shadow-[0_0_50px_rgba(245,158,11,0.3)]');
+    }
+
+    function startTimer() {
+      stopTimer();
+      timeRemaining = QUESTION_TIME_LIMIT;
+      lastWarningSecond = -1;
+      resetTimerVisuals();
+
+      const bar = document.getElementById('quizTimerBar');
+      const timeText = document.getElementById('quizTimeText');
+      const quizBox = document.getElementById('quizBox');
+
+      const tickInterval = 50; // 50ms 주기 정밀 갱신
+      quizTimer = setInterval(() => {
+        timeRemaining -= tickInterval / 1000;
+
+        if (timeRemaining <= 0) {
+          timeRemaining = 0;
+          bar.style.width = '0%';
+          timeText.innerText = '0.0초';
+          stopTimer();
+          handleTimeOut();
+          return;
+        }
+
+        // 게이지 바 너비 및 텍스트 갱신
+        const pct = (timeRemaining / QUESTION_TIME_LIMIT) * 100;
+        bar.style.width = `${Math.max(0, pct)}%`;
+        timeText.innerText = `${timeRemaining.toFixed(1)}초`;
+
+        // 🚨 3초 이하 긴급 위험 상태 감지
+        if (timeRemaining <= 3.0) {
+          bar.className = 'h-full rounded-full bg-gradient-to-r from-red-500 to-rose-600 w-full animate-pulse';
+          timeText.className = 'font-impact text-sm text-red-400 animate-pulse tracking-wider';
+          quizBox.classList.remove('border-amber-400', 'shadow-[0_0_50px_rgba(245,158,11,0.3)]');
+          quizBox.classList.add('border-red-500', 'shadow-[0_0_50px_rgba(239,68,68,0.6)]');
+
+          const currentSec = Math.ceil(timeRemaining);
+          if (currentSec !== lastWarningSecond && currentSec > 0) {
+            lastWarningSecond = currentSec;
+            soundWarningBeep();
+          }
+        }
+      }, tickInterval);
+    }
+
+    function handleTimeOut() {
+      soundWrong();
+      quizCombo = 0;
+      document.getElementById('quizComboBadge').classList.add('hidden');
+
+      const currentGod = quizDeck[currentQuizIndex];
+      const fb = document.getElementById('quizFeedback');
+      const box = document.getElementById('quizBox');
+      const input = document.getElementById('quizInput');
+
+      input.disabled = true;
+      fb.innerText = `⏰ 시간 초과! 정답은 [ ${currentGod.name} ] 이었습니다!`;
+      fb.className = 'h-6 mt-3 text-xs font-black text-red-400 animate-shake';
+      box.classList.add('animate-shake');
+
+      setTimeout(() => {
+        box.classList.remove('animate-shake');
+        currentQuizIndex++;
+        renderCurrentQuiz();
+      }, 1200);
+    }
+
+    function startQuizBattle() {
+      initAudio();
+      quizDeck = [...gods].sort(() => Math.random() - 0.5).slice(0, TOTAL_QUIZ_ROUNDS);
+      currentQuizIndex = 0;
+      quizScore = 0;
+      quizCombo = 0;
+
+      document.getElementById('quizResultBody').classList.add('hidden');
+      document.getElementById('quizQuestionBody').classList.remove('hidden');
+      document.getElementById('quizTimerSection').classList.remove('hidden');
+      document.getElementById('quizModal').classList.remove('hidden');
+      updateQuizScoreDisplay();
+      renderCurrentQuiz();
+    }
+
+    function renderCurrentQuiz() {
+      if (currentQuizIndex >= quizDeck.length) {
+        finishQuiz();
+        return;
+      }
+
+      const q = quizDeck[currentQuizIndex];
+      document.getElementById('quizProgress').innerText = `${currentQuizIndex + 1}/${quizDeck.length}`;
+      document.getElementById('quizAvatar').innerHTML = characterAvatarSVG(q);
+      document.getElementById('quizHintTitle').innerText = q.title;
+      document.getElementById('quizChosungText').innerText = extractChosung(q.name);
+
+      const tagsContainer = document.getElementById('quizHintTags');
+      tagsContainer.innerHTML = q.tags.map(t => `<span class="bg-slate-800 text-amber-300 text-xs px-2.5 py-1 rounded-md border border-slate-700 font-bold">${t}</span>`).join('');
+
+      const input = document.getElementById('quizInput');
+      input.value = '';
+      input.disabled = false;
+      input.focus();
+
+      const fb = document.getElementById('quizFeedback');
+      fb.innerText = '';
+      fb.className = 'h-6 mt-3 text-xs font-black';
+
+      const comboBadge = document.getElementById('quizComboBadge');
+      if (quizCombo >= 2) {
+        comboBadge.classList.remove('hidden');
+        document.getElementById('quizComboText').innerText = quizCombo;
+      } else {
+        comboBadge.classList.add('hidden');
+      }
+
+      startTimer();
+    }
+
+    function handleQuizSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('quizInput');
+      const answer = input.value.trim().replace(/\s+/g, '');
+      const currentGod = quizDeck[currentQuizIndex];
+      const correctName = currentGod.name.replace(/\s+/g, '');
+
+      if (!answer) return;
+
+      const fb = document.getElementById('quizFeedback');
+      const box = document.getElementById('quizBox');
+
+      if (answer === correctName) {
+        stopTimer();
+        soundCorrect();
+        triggerCorrectConfetti();
+        quizCombo++;
+
+        // 남은 시간에 따른 스피드 보너스 (+1~10점)
+        const timeBonus = Math.floor(timeRemaining);
+        const comboBonus = quizCombo > 1 ? (quizCombo - 1) * 5 : 0;
+        const gain = 10 + comboBonus + timeBonus;
+        quizScore += gain;
+        updateQuizScoreDisplay();
+
+        fb.innerText = `💥 정답! +${gain}점 (${currentGod.name})! [스피드 보너스 +${timeBonus}]`;
+        fb.className = 'h-6 mt-3 text-sm font-black text-emerald-400 animate-pop';
+        input.disabled = true;
+
+        setTimeout(() => {
+          currentQuizIndex++;
+          renderCurrentQuiz();
+        }, 850);
+      } else {
+        soundWrong();
+        quizCombo = 0;
+        document.getElementById('quizComboBadge').classList.add('hidden');
+        fb.innerText = `❌ 아쉬워요! 다시 생각해보세요!`;
+        fb.className = 'h-6 mt-3 text-xs font-black text-rose-400';
+        box.classList.add('animate-shake');
+        setTimeout(() => box.classList.remove('animate-shake'), 450);
+        input.select();
+      }
+    }
+
+    function skipQuestion() {
+      stopTimer();
+      soundWrong();
+      const currentGod = quizDeck[currentQuizIndex];
+      const fb = document.getElementById('quizFeedback');
+      fb.innerText = `💡 정답은 [ ${currentGod.name} ] 였습니다!`;
+      fb.className = 'h-6 mt-3 text-xs font-black text-amber-300';
+      quizCombo = 0;
+      document.getElementById('quizComboBadge').classList.add('hidden');
+      document.getElementById('quizInput').disabled = true;
+
+      setTimeout(() => {
+        currentQuizIndex++;
+        renderCurrentQuiz();
+      }, 1000);
+    }
+
+    function updateQuizScoreDisplay() {
+      document.getElementById('quizScore').innerText = quizScore;
+    }
+
+    function finishQuiz() {
+      stopTimer();
+      soundVictory();
+      triggerVictoryConfetti();
+      document.getElementById('quizTimerSection').classList.add('hidden');
+      document.getElementById('quizQuestionBody').classList.add('hidden');
+      document.getElementById('quizResultBody').classList.remove('hidden');
+      document.getElementById('finalScore').innerText = quizScore;
+
+      const gradeEl = document.getElementById('resultGrade');
+      const medalEl = document.getElementById('resultMedal');
+      const commentEl = document.getElementById('resultComment');
+
+      if (quizScore >= 160) {
+        medalEl.innerText = '⚡👑';
+        gradeEl.innerText = '전광석화 올림포스 주신 (제우스급)';
+        commentEl.innerText = '엄청난 순발력과 완벽한 신화 지식! 진정한 신들의 왕으로 등극하셨습니다!';
+      } else if (quizScore >= 100) {
+        medalEl.innerText = '🏛️⚔️';
+        gradeEl.innerText = '올림포스 정예 12신 전사';
+        commentEl.innerText = '뛰어난 반응 속도로 신화 퀴즈를 돌파했습니다!';
+      } else {
+        medalEl.innerText = '🛡️';
+        gradeEl.innerText = '신화 수련 전사';
+        commentEl.innerText = '카드를 뒤집어 특징을 조금 더 익히면 다음엔 최고 점수를 얻을 수 있어요!';
+      }
+    }
+
+    function closeQuizModal() {
+      stopTimer();
+      document.getElementById('quizModal').classList.add('hidden');
+    }
+
+    // 카드 렌더링 & 필터
+    let currentFilter = 'all';
+
+    function renderCards() {
+      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+      const grid = document.getElementById('cardGrid');
+      grid.innerHTML = '';
+
+      const filtered = gods.filter(g => {
+        const matchesGen = currentFilter === 'all' || g.gen.toString() === currentFilter;
+        const matchesSearch = g.name.includes(query) || g.title.includes(query) || g.tags.some(t => t.includes(query));
+        return matchesGen && matchesSearch;
+      });
+
+      filtered.forEach(g => {
+        const card = document.createElement('div');
+        card.className = 'card h-[460px] perspective-1000 cursor-pointer select-none group';
+        card.id = `card-${g.id}`;
+
+        card.innerHTML = `
+          <div class="card-inner relative w-full h-full transform-style-3d shadow-2xl rounded-3xl border-2 ${g.borderCol} bg-slate-900 overflow-hidden">
+            <div class="backface-hidden absolute inset-0 p-4 flex flex-col justify-between bg-gradient-to-b from-slate-900 via-slate-900 to-black">
+              <div>
+                <div class="flex justify-between items-center mb-1.5">
+                  <span class="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${g.badgeBg}">${g.gen}세대 신</span>
+                  <span class="text-xs text-slate-400 font-bold tracking-tight">${g.en}</span>
+                </div>
+                <h3 class="font-impact text-2xl text-white tracking-wide text-left">${g.title}</h3>
+                <h2 class="text-lg font-black text-amber-400 text-left -mt-1">${g.name}</h2>
+              </div>
+              <div class="relative w-full h-44 rounded-2xl overflow-hidden border border-slate-700 my-2 group-hover:border-amber-400 transition-colors shadow-inner bg-slate-950/60 flex items-center justify-center">
+                <div class="w-32 h-32 drop-shadow-lg">${characterAvatarSVG(g)}</div>
+              </div>
+              <div class="flex flex-wrap gap-1.5 my-1">
+                ${g.tags.map(t => `<span class="text-[11px] font-black bg-slate-800 text-amber-300 px-2.5 py-0.5 rounded-md border border-slate-700">${t}</span>`).join('')}
+              </div>
+              <div class="bg-slate-950/90 p-2.5 rounded-xl border border-slate-800 text-xs text-slate-300 text-left font-medium leading-relaxed">
+                💡 <span class="text-amber-200 font-bold">${g.hook}</span>
+              </div>
+              <div class="text-center text-[11px] text-slate-400 font-bold pt-1">👆 카드를 누르면 비밀 이야기가 열려요!</div>
+            </div>
+
+            <div class="backface-hidden rotate-y-180 absolute inset-0 p-5 flex flex-col justify-between bg-gradient-to-br from-slate-900 to-amber-950 border-2 border-amber-400/60 text-left">
+              <div>
+                <div class="flex justify-between items-center border-b border-amber-500/30 pb-2">
+                  <span class="font-impact text-xl text-amber-300">${g.name}의 숨겨진 비밀</span>
+                  <span class="text-xs text-amber-400 font-bold">뒤집기 ↩</span>
+                </div>
+                <div class="mt-4 bg-black/40 p-3 rounded-xl border border-amber-500/20">
+                  <p class="text-xs font-bold text-amber-200 uppercase mb-1">🔥 알고 있나요?</p>
+                  <p class="text-xs text-slate-200 leading-relaxed font-medium">${g.secret}</p>
+                </div>
+              </div>
+              <div class="space-y-2 bg-slate-950/80 p-3 rounded-xl border border-slate-800 text-xs">
+                <div><span class="text-amber-400 font-black">👑 부모:</span> <span class="text-slate-300">${g.parents}</span></div>
+                <div><span class="text-amber-400 font-black">🔗 관계:</span> <span class="text-slate-300">${g.relations}</span></div>
+              </div>
+              <button onclick="event.stopPropagation(); openTreeModalWithFocus('${g.id}')"
+                      class="w-full py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg">
+                <i class="fa-solid fa-tree"></i> 가계도 트리에서 위치 확인
+              </button>
+            </div>
+          </div>
+        `;
+
+        card.onclick = (e) => {
+          if (!e.target.closest('button')) {
+            card.classList.toggle('flipped');
+          }
+        };
+
+        grid.appendChild(card);
+      });
+    }
+
+    function filterGen(gen) {
+      currentFilter = gen;
+      document.querySelectorAll('#filterButtons button').forEach(b => {
+        b.classList.remove('bg-amber-400', 'text-slate-950', 'font-black');
+        b.classList.add('bg-slate-800', 'text-slate-300');
+      });
+      event.target.classList.add('bg-amber-400', 'text-slate-950', 'font-black');
+      renderCards();
+    }
+
+    function drawTreeLines() {
+      const svg = document.getElementById('treeSvg');
+      const canvas = document.getElementById('treeCanvas');
+      const canvasRect = canvas.getBoundingClientRect();
+      svg.innerHTML = '';
+
+      treeRelations.forEach((rel) => {
+        const fromEl = document.getElementById(`node-${rel.from}`);
+        const toEl = document.getElementById(`node-${rel.to}`);
+        if (!fromEl || !toEl) return;
+
+        const r1 = fromEl.getBoundingClientRect();
+        const r2 = toEl.getBoundingClientRect();
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        let pathData;
+
+        if (rel.type === 'spouse' && Math.abs(r1.top - r2.top) < 40) {
+          // 같은 세대(부부) 관계는 좌우를 잇는 곡선으로 표시
+          const leftR = r1.left <= r2.left ? r1 : r2;
+          const rightR = r1.left <= r2.left ? r2 : r1;
+          const x1 = leftR.right - canvasRect.left;
+          const y1 = leftR.top + leftR.height / 2 - canvasRect.top;
+          const x2 = rightR.left - canvasRect.left;
+          const y2 = rightR.top + rightR.height / 2 - canvasRect.top;
+          pathData = `M ${x1} ${y1} C ${(x1 + x2) / 2} ${y1 - 20}, ${(x1 + x2) / 2} ${y2 - 20}, ${x2} ${y2}`;
+        } else {
+          const x1 = (r1.left + r1.width / 2) - canvasRect.left;
+          const y1 = r1.bottom - canvasRect.top;
+          const x2 = (r2.left + r2.width / 2) - canvasRect.left;
+          const y2 = r2.top - canvasRect.top;
+          const controlY = (y1 + y2) / 2;
+          pathData = `M ${x1} ${y1} C ${x1} ${controlY}, ${x2} ${controlY}, ${x2} ${y2}`;
+        }
+
+        path.setAttribute('d', pathData);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('class', 'tree-path');
+        path.dataset.from = rel.from;
+        path.dataset.to = rel.to;
+        path.dataset.type = rel.type;
+
+        if (rel.type === 'spouse') {
+          path.setAttribute('stroke', '#f472b6');
+          path.setAttribute('stroke-width', '2.5');
+          path.setAttribute('stroke-dasharray', '6,5');
+          path.setAttribute('opacity', '0.7');
+        } else {
+          path.setAttribute('stroke', '#334155');
+          path.setAttribute('stroke-width', '2.5');
+          path.setAttribute('opacity', '1');
+        }
+
+        svg.appendChild(path);
+      });
+    }
+
+    // 클릭한 신의 조상~자손 전체 혈통(및 배우자) 경로를 찾아서 강조 대상으로 반환
+    function getFullLineage(godId) {
+      const edgeKeys = new Set();
+      const nodeIds = new Set([godId]);
+
+      let frontier = [godId];
+      while (frontier.length) {
+        const next = [];
+        frontier.forEach(cur => {
+          treeRelations.forEach(r => {
+            if (r.type === 'lineage' && r.to === cur) {
+              edgeKeys.add(`${r.from}|${r.to}|${r.type}`);
+              if (!nodeIds.has(r.from)) { nodeIds.add(r.from); next.push(r.from); }
+            }
+          });
+        });
+        frontier = next;
+      }
+
+      frontier = [godId];
+      while (frontier.length) {
+        const next = [];
+        frontier.forEach(cur => {
+          treeRelations.forEach(r => {
+            if (r.type === 'lineage' && r.from === cur) {
+              edgeKeys.add(`${r.from}|${r.to}|${r.type}`);
+              if (!nodeIds.has(r.to)) { nodeIds.add(r.to); next.push(r.to); }
+            }
+          });
+        });
+        frontier = next;
+      }
+
+      treeRelations.forEach(r => {
+        if (r.type === 'spouse' && (r.from === godId || r.to === godId)) {
+          edgeKeys.add(`${r.from}|${r.to}|${r.type}`);
+          nodeIds.add(r.from);
+          nodeIds.add(r.to);
+        }
+      });
+
+      return { edgeKeys, nodeIds };
+    }
+
+    function focusOnNode(godId) {
+      const { edgeKeys, nodeIds } = getFullLineage(godId);
+
+      document.querySelectorAll('.tree-path').forEach(p => {
+        const key = `${p.dataset.from}|${p.dataset.to}|${p.dataset.type}`;
+        p.classList.toggle('active', edgeKeys.has(key));
+      });
+
+      document.querySelectorAll('.tree-node').forEach(n => {
+        const id = n.id.replace('node-', '');
+        n.classList.remove('ring-2', 'ring-amber-400/70');
+        if (nodeIds.has(id) && id !== godId) {
+          n.classList.add('ring-2', 'ring-amber-400/70');
+        }
+      });
+
+      setTimeout(() => {
+        closeTreeModal();
+        const targetCard = document.getElementById(`card-${godId}`);
+        if (targetCard) {
+          targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          targetCard.classList.add('ring-4', 'ring-amber-400', 'scale-105', 'transition-all');
+          setTimeout(() => targetCard.classList.remove('ring-4', 'ring-amber-400', 'scale-105'), 1800);
+        }
+      }, 450);
+    }
+
+    function openTreeModalWithFocus(godId) {
+      openTreeModal();
+      setTimeout(() => {
+        const node = document.getElementById(`node-${godId}`);
+        if (node) {
+          node.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+          focusOnNode(godId);
+        }
+      }, 100);
+    }
+
+    function openTreeModal() {
+      document.getElementById('treeModal').classList.remove('hidden');
+      setTimeout(drawTreeLines, 60);
+    }
+
+    function closeTreeModal() {
+      document.getElementById('treeModal').classList.add('hidden');
+    }
+
+    window.addEventListener('resize', () => {
+      if (!document.getElementById('treeModal').classList.contains('hidden')) {
+        drawTreeLines();
+      }
+    });
+
+    document.getElementById('searchInput').addEventListener('input', renderCards);
+    renderTreeAvatars();
+    renderCards();
+  </script>
+</body>
+</html>

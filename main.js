@@ -17,6 +17,12 @@ const projects = [
     icon: "🐍",
     link: "snake-game/index.html",
   },
+  {
+    title: "그리스 신화 배틀도감",
+    description: "캐릭터 가계도와 10초 타임어택 퀴즈로 배우는 올림포스 신화",
+    icon: "⚡",
+    link: "mythology-card-game/index.html",
+  },
 ];
 
 const grid = document.getElementById("project-grid");
