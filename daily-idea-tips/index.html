@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>오늘의 아이디어</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <a class="back-link" href="../index.html">← 포트폴리오로</a>
+
+    <header class="idea-header">
+      <p class="idea-date" id="idea-date"></p>
+      <h1>오늘의 아이디어</h1>
+      <p class="idea-sub">일상의 사소한 어려움, 하루 하나씩 해결해요</p>
+    </header>
+
+    <main class="idea-card">
+      <span class="category-badge" id="category-badge"></span>
+      <h2 class="idea-title" id="idea-title"></h2>
+      <p class="idea-problem" id="idea-problem"></p>
+
+      <button class="btn-toggle" id="toggle-btn">해결 방법 보기 ▾</button>
+
+      <div class="idea-detail" id="idea-detail" hidden>
+        <section class="detail-section">
+          <h3>원인</h3>
+          <p id="idea-cause"></p>
+        </section>
+        <section class="detail-section">
+          <h3>해결 옵션</h3>
+          <ul class="option-list" id="idea-options"></ul>
+        </section>
+        <section class="detail-section">
+          <h3>실행 단계</h3>
+          <ol class="step-list" id="idea-steps"></ol>
+        </section>
+      </div>
+    </main>
+
+    <section class="history-section">
+      <h3>지난 아이디어</h3>
+      <ul class="history-list" id="history-list"></ul>
+      <p class="empty-history" id="empty-history">아직 기록이 없습니다. 내일 다시 방문해보세요!</p>
+    </section>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>

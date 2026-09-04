@@ -17,6 +17,12 @@ const projects = [
     icon: "🐍",
     link: "snake-game/index.html",
   },
+  {
+    title: "오늘의 아이디어",
+    description: "매일 하나씩, 일상의 사소한 어려움을 해결하는 아이디어",
+    icon: "💡",
+    link: "daily-idea-tips/index.html",
+  },
 ];
 
 const grid = document.getElementById("project-grid");
